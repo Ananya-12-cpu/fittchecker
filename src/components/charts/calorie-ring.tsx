@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, ReduceMotion, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import { AppText } from '@/components/ui/text';
@@ -27,7 +27,7 @@ export function CalorieRing({ consumed, target, size = 236, stroke = 18 }: Props
 
   const progress = useSharedValue(0);
   useEffect(() => {
-    progress.value = withTiming(Math.min(pct, 1), { duration: 900, easing: Easing.out(Easing.cubic) });
+    progress.value = withTiming(Math.min(pct, 1), { duration: 900, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.System });
   }, [pct, progress]);
 
   const animatedProps = useAnimatedProps(() => ({

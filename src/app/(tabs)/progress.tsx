@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { WeekBars } from '@/components/charts/week-bars';
 import { Stat } from '@/components/dashboard';
@@ -17,6 +18,7 @@ import { usePlan, useWeek, useWeights } from '@/hooks/use-fit-data';
 import { useTheme } from '@/hooks/use-theme';
 import { friendlyDay } from '@/lib/date';
 import { confirmAction } from '@/lib/feedback';
+import { enter, listLayout, rowIn, rowOut } from '@/lib/motion';
 
 export default function ProgressScreen() {
   const t = useTheme();
@@ -38,9 +40,11 @@ export default function ProgressScreen() {
 
   return (
     <Screen>
-      <AppText variant="display">Progress</AppText>
+      <Animated.View entering={enter(0)}>
+        <AppText variant="display">Progress</AppText>
+      </Animated.View>
 
-      <Card style={{ gap: Spacing.three }}>
+      <Card index={1} style={{ gap: Spacing.three }}>
         <View>
           <AppText variant="label">Last 7 days</AppText>
           <AppText variant="h2">Calories eaten</AppText>
@@ -56,7 +60,7 @@ export default function ProgressScreen() {
       <SectionHeader title="Weight history" action={<Button label="Log weight" icon="scale" variant="ghost" onPress={() => router.push('/log-weight')} />} />
 
       {latest ? (
-        <Card style={styles.summary}>
+        <Card index={2} style={styles.summary}>
           <View style={{ flex: 1 }}>
             <AppText variant="label">Current</AppText>
             <AppText variant="display">
@@ -81,7 +85,7 @@ export default function ProgressScreen() {
         </Card>
       ) : null}
 
-      <Card padded={false}>
+      <Card index={3} padded={false}>
         {weights.length === 0 ? (
           <EmptyState icon="scale" title="No weigh-ins yet" body="Log your weight weekly to track the trend." />
         ) : (
@@ -89,7 +93,7 @@ export default function ProgressScreen() {
             const prev = weights[i + 1];
             const d = prev ? w.kg - prev.kg : 0;
             return (
-              <View key={w.id} style={[styles.row, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline }]}>
+              <Animated.View key={w.id} entering={rowIn} exiting={rowOut} layout={listLayout} style={[styles.row, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline }]}>
                 <View style={{ flex: 1 }}>
                   <AppText variant="title">{formatWeight(w.kg, units)}</AppText>
                   <AppText variant="caption">
@@ -112,7 +116,7 @@ export default function ProgressScreen() {
                     if (await confirmAction('Delete weigh-in?', `${formatWeight(w.kg, units)} on ${friendlyDay(w.date)}`)) deleteWeight(db, w.id);
                   }}
                 />
-              </View>
+              </Animated.View>
             );
           })
         )}

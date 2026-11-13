@@ -44,6 +44,8 @@ export default function RootLayout() {
             headerTitleStyle: { fontFamily: DisplayFont.semibold },
             headerShadowVisible: false,
             contentStyle: { backgroundColor: t.background },
+            animation: 'slide_from_right',
+            animationDuration: 280,
           }}
         >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

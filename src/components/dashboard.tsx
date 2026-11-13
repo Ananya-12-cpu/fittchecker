@@ -1,6 +1,9 @@
 import { useSQLiteContext } from 'expo-sqlite';
 import { StyleSheet, View } from 'react-native';
+import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withSpring, ZoomIn } from 'react-native-reanimated';
+import { useEffect } from 'react';
 
+import { Bump } from '@/components/ui/bump';
 import { IconButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/controls';
@@ -12,6 +15,7 @@ import type { Insight } from '@/features/coach/types';
 import { formatMl } from '@/features/health/units';
 import { useTheme } from '@/hooks/use-theme';
 import type { DateKey } from '@/lib/date';
+import { SPRING } from '@/lib/motion';
 
 export function Stat({ label, value, icon, color }: { label: string; value: string; icon: IconName; color: ThemeColor }) {
   const t = useTheme();
@@ -21,7 +25,9 @@ export function Stat({ label, value, icon, color }: { label: string; value: stri
         <Icon name={icon} size={13} color={t[color]} />
         <AppText variant="label">{label}</AppText>
       </View>
-      <AppText variant="number">{value}</AppText>
+      <Bump value={value}>
+        <AppText variant="number">{value}</AppText>
+      </Bump>
     </View>
   );
 }
@@ -41,10 +47,12 @@ export function WaterCard({ date, ml, goal }: { date: DateKey; ml: number; goal:
             <Icon name="water" size={13} color={t.water} />
             <AppText variant="label">Water</AppText>
           </View>
+          <Bump value={ml} style={{ alignSelf: 'flex-start' }}>
           <AppText variant="number">
             {formatMl(ml)}
             <AppText variant="caption"> / {formatMl(goal)}</AppText>
           </AppText>
+          </Bump>
         </View>
         <View style={styles.row}>
           <IconButton icon="remove" label="Remove a glass of water" onPress={() => addWater(db, date, -GLASS)} />
@@ -53,7 +61,7 @@ export function WaterCard({ date, ml, goal }: { date: DateKey; ml: number; goal:
       </View>
       <View style={styles.glasses} accessible accessibilityLabel={`${glasses} of ${goalGlasses} glasses`}>
         {Array.from({ length: Math.max(goalGlasses, glasses) }, (_, i) => (
-          <View key={i} style={[styles.glass, { backgroundColor: i < glasses ? t.water : t.track }]} />
+          <Glass key={i} filled={i < glasses} />
         ))}
       </View>
     </Card>
@@ -106,3 +114,16 @@ const styles = StyleSheet.create({
   insight: { flexDirection: 'row', gap: Spacing.three, alignItems: 'flex-start' },
   insightIcon: { width: 32, height: 32, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
 });
+
+/** One water glass: springs up when filled, relaxes when emptied. */
+function Glass({ filled }: { filled: boolean }) {
+  const t = useTheme();
+  const p = useSharedValue(filled ? 1 : 0);
+  useEffect(() => {
+    p.set(withSpring(filled ? 1 : 0, { ...SPRING, reduceMotion: ReduceMotion.System }));
+  }, [filled, p]);
+  const anim = useAnimatedStyle(() => ({
+    transform: [{ scale: 0.9 + 0.1 * p.get() }],
+  }));
+  return <Animated.View entering={ZoomIn.duration(200).reduceMotion(ReduceMotion.System)} style={[styles.glass, { backgroundColor: filled ? t.water : t.track }, anim]} />;
+}

@@ -1,16 +1,25 @@
-import { StyleSheet, View, type ViewProps } from 'react-native';
+import { StyleSheet, type ViewProps } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { enter, listLayout } from '@/lib/motion';
 
-type Props = ViewProps & { tone?: 'glass' | 'solid' | 'accent'; padded?: boolean };
+type Props = ViewProps & {
+  tone?: 'glass' | 'solid' | 'accent';
+  padded?: boolean;
+  /** Position in the screen's entrance sequence (0 = first). Omit to skip the entrance. */
+  index?: number;
+};
 
-/** Glass card: translucent surface with a hairline border. */
-export function Card({ tone = 'solid', padded = true, style, ...rest }: Props) {
+/** Glass card: translucent surface with a hairline border. Fades/slides in when `index` is given. */
+export function Card({ tone = 'solid', padded = true, index, style, ...rest }: Props) {
   const t = useTheme();
   const bg = tone === 'accent' ? t.accent : tone === 'glass' ? t.glass : t.backgroundElement;
   return (
-    <View
+    <Animated.View
+      entering={index === undefined ? undefined : enter(index)}
+      layout={index === undefined ? undefined : listLayout}
       style={[
         styles.card,
         { backgroundColor: bg, borderColor: tone === 'accent' ? 'transparent' : t.hairline },

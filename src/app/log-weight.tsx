@@ -36,7 +36,7 @@ export default function LogWeight() {
       <AppText variant="body" color="textSecondary">
         Weigh in at the same time each week — ideally in the morning, before breakfast.
       </AppText>
-      <Card>
+      <Card index={0}>
         <Stepper value={value} onChange={setValue} step={units === 'imperial' ? 0.5 : 0.1} min={0} max={800} suffix={weightUnit(units)} />
       </Card>
       {profile && valid ? (

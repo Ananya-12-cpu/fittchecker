@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { IconButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import { useDay, usePlan } from '@/hooks/use-fit-data';
 import { useTheme } from '@/hooks/use-theme';
 import { addDays, friendlyDay, toDateKey } from '@/lib/date';
 import { confirmAction } from '@/lib/feedback';
+import { enter, fadeIn, listLayout, rowIn, rowOut } from '@/lib/motion';
 
 export default function LogScreen() {
   const t = useTheme();
@@ -31,12 +33,16 @@ export default function LogScreen() {
 
   return (
     <Screen>
-      <AppText variant="display">Log</AppText>
+      <Animated.View entering={enter(0)}>
+        <AppText variant="display">Log</AppText>
+      </Animated.View>
 
       <View style={styles.dateRow}>
         <IconButton icon="left" label="Previous day" onPress={() => setDate((d) => addDays(d, -1))} />
         <View style={{ alignItems: 'center' }}>
-          <AppText variant="h2">{friendlyDay(date)}</AppText>
+          <Animated.View key={date} entering={fadeIn}>
+            <AppText variant="h2">{friendlyDay(date)}</AppText>
+          </Animated.View>
           <AppText variant="caption">
             {Math.round(net).toLocaleString('en-US')} net · {plan ? plan.calorieTarget.toLocaleString('en-US') : '—'} target
           </AppText>
@@ -44,11 +50,12 @@ export default function LogScreen() {
         <IconButton icon="right" label="Next day" onPress={() => !isFuture && setDate((d) => addDays(d, 1))} disabled={isFuture} />
       </View>
 
-      {MEALS.map((meal) => {
+      <Animated.View key={date} entering={fadeIn} style={styles.days}>
+      {MEALS.map((meal, idx) => {
         const items = day.food.filter((f) => f.meal === meal.id);
         const total = sumNutrition(items);
         return (
-          <Card key={meal.id} style={{ gap: Spacing.two }}>
+          <Card key={meal.id} index={idx + 1} style={{ gap: Spacing.two }}>
             <View style={styles.rowBetween}>
               <View>
                 <AppText variant="h2">{meal.label}</AppText>
@@ -64,7 +71,7 @@ export default function LogScreen() {
               />
             </View>
             {items.map((item) => (
-              <View key={item.id} style={[styles.item, { borderTopColor: t.hairline }]}>
+              <Animated.View key={item.id} entering={rowIn} exiting={rowOut} layout={listLayout} style={[styles.item, { borderTopColor: t.hairline }]}>
                 <View style={{ flex: 1 }}>
                   <AppText variant="title" numberOfLines={1}>
                     {item.foodName}
@@ -88,13 +95,13 @@ export default function LogScreen() {
                     }
                   }}
                 />
-              </View>
+              </Animated.View>
             ))}
           </Card>
         );
       })}
 
-      <Card style={{ gap: Spacing.two }}>
+      <Card index={MEALS.length + 1} style={{ gap: Spacing.two }}>
         <View style={styles.rowBetween}>
           <View>
             <AppText variant="h2">Exercise</AppText>
@@ -108,7 +115,7 @@ export default function LogScreen() {
           <EmptyState icon="run" title="No activity yet" body="Walks, gym, yoga, sports — it all counts." />
         ) : (
           day.exercise.map((e) => (
-            <View key={e.id} style={[styles.item, { borderTopColor: t.hairline }]}>
+            <Animated.View key={e.id} entering={rowIn} exiting={rowOut} layout={listLayout} style={[styles.item, { borderTopColor: t.hairline }]}>
               <Icon name="flame" size={16} color={t.burn} />
               <View style={{ flex: 1 }}>
                 <AppText variant="title">{e.name}</AppText>
@@ -126,15 +133,17 @@ export default function LogScreen() {
                   if (await confirmAction('Remove activity?', `${e.name} will be removed.`, 'Remove')) deleteExercise(db, e.id);
                 }}
               />
-            </View>
+            </Animated.View>
           ))
         )}
       </Card>
+      </Animated.View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  days: { gap: Spacing.three },
   dateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   item: {

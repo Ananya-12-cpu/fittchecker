@@ -2,9 +2,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, IconButton } from '@/components/ui/button';
+import { PressScale } from '@/components/ui/press-scale';
 import { Card } from '@/components/ui/card';
 import { Chip, Field, Segmented, Stepper } from '@/components/ui/controls';
 import { Icon } from '@/components/ui/icon';
@@ -20,6 +22,7 @@ import { useDbQuery } from '@/hooks/use-query';
 import { useTheme } from '@/hooks/use-theme';
 import { toDateKey } from '@/lib/date';
 import { success } from '@/lib/feedback';
+import { listLayout, rowIn, rowOut } from '@/lib/motion';
 
 const isDrink = (f: Food) => f.category === 'drinks';
 const baseUnit = (f: Food) => (isDrink(f) ? 'ml' : 'g');
@@ -136,7 +139,7 @@ export default function AddFood() {
           onChange={(u) => setDraft({ ...draft, unit: u, qty: defaultQty(u) })}
         />
 
-        <Card>
+        <Card index={1}>
           <Stepper
             value={qty}
             onChange={(q) => setDraft({ ...draft, qty: q })}
@@ -147,7 +150,7 @@ export default function AddFood() {
           />
         </Card>
 
-        <Card tone="accent" style={styles.preview}>
+        <Card index={2} tone="accent" style={styles.preview}>
           <View>
             <AppText variant="label" style={{ color: t.onAccent, opacity: 0.7 }}>
               {n.grams} {baseUnit(food)} total
@@ -208,7 +211,7 @@ export default function AddFood() {
         </View>
 
         {plateItems.length > 0 && (
-          <Card style={{ gap: Spacing.two }}>
+          <Card index={0} style={{ gap: Spacing.two }}>
             <View style={styles.plateHeader}>
               <AppText variant="label">Your plate · {plateItems.length} item{plateItems.length === 1 ? '' : 's'}</AppText>
               <AppText variant="caption">
@@ -216,7 +219,7 @@ export default function AddFood() {
               </AppText>
             </View>
             {plateItems.map((item) => (
-              <View key={item.key} style={[styles.plateRow, { borderColor: t.hairline }]}>
+              <Animated.View key={item.key} entering={rowIn} exiting={rowOut} layout={listLayout} style={[styles.plateRow, { borderColor: t.hairline }]}>
                 <Pressable
                   style={{ flex: 1 }}
                   accessibilityRole="button"
@@ -231,7 +234,7 @@ export default function AddFood() {
                   </AppText>
                 </Pressable>
                 <IconButton icon="close" label={`Remove ${item.food.name}`} size={32} onPress={() => removeItem(item.key)} />
-              </View>
+              </Animated.View>
             ))}
           </Card>
         )}
@@ -270,12 +273,13 @@ export default function AddFood() {
         ) : (
           <View style={{ gap: Spacing.two }}>
             {results.map((f) => (
-              <Pressable
+              <PressScale
                 key={f.id}
                 onPress={() => pick(f)}
                 accessibilityRole="button"
                 accessibilityLabel={`${f.name}, ${f.kcal} kilocalories per 100 grams`}
-                style={({ pressed }) => [styles.result, { backgroundColor: t.backgroundElement, borderColor: t.hairline, opacity: pressed ? 0.7 : 1 }]}
+                to={0.98}
+                style={[styles.result, { backgroundColor: t.backgroundElement, borderColor: t.hairline }]}
               >
                 <View style={{ flex: 1 }}>
                   <AppText variant="title" numberOfLines={1}>
@@ -289,7 +293,7 @@ export default function AddFood() {
                   </AppText>
                 </View>
                 <Icon name="add" size={18} color={t.accent} />
-              </Pressable>
+              </PressScale>
             ))}
           </View>
         )}
@@ -298,7 +302,7 @@ export default function AddFood() {
       </Screen>
 
       {plate.length > 0 && (
-        <View style={[styles.bar, { backgroundColor: t.background, borderColor: t.hairline, paddingBottom: Spacing.three + insets.bottom }]}>
+        <Animated.View entering={FadeInDown.duration(240)} exiting={FadeOutDown.duration(160)} style={[styles.bar, { backgroundColor: t.background, borderColor: t.hairline, paddingBottom: Spacing.three + insets.bottom }]}>
           <View style={styles.barInner}>
             <Button
               label={saving ? 'Saving…' : `Log ${plate.length} to ${mealLabel} · ${Math.round(totals.kcal)} kcal`}
@@ -308,7 +312,7 @@ export default function AddFood() {
               onPress={logPlate}
             />
           </View>
-        </View>
+        </Animated.View>
       )}
     </View>
   );

@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { CalorieRing } from '@/components/charts/calorie-ring';
 import { MacroBars } from '@/components/charts/macro-bars';
@@ -12,6 +13,7 @@ import { Spacing } from '@/constants/theme';
 import { useProfile } from '@/data/profile-store';
 import { coach, useDay, usePlan } from '@/hooks/use-fit-data';
 import { friendlyDay, greeting, shortDate, toDateKey } from '@/lib/date';
+import { enter, listLayout } from '@/lib/motion';
 
 export default function TodayScreen() {
   const profile = useProfile();
@@ -27,7 +29,7 @@ export default function TodayScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
+      <Animated.View entering={enter(0)} style={styles.header}>
         <AppText variant="label">{shortDate(today)}</AppText>
         <AppText variant="display">
           {greeting()}
@@ -37,9 +39,9 @@ export default function TodayScreen() {
             </AppText>
           ) : null}
         </AppText>
-      </View>
+      </Animated.View>
 
-      <Card style={styles.hero}>
+      <Card index={1} style={styles.hero}>
         <CalorieRing consumed={net} target={plan.calorieTarget} />
         <View style={styles.stats}>
           <Stat label="Eaten" value={fmt(day.summary.eatenKcal)} icon="food" color="accent" />
@@ -48,7 +50,7 @@ export default function TodayScreen() {
         </View>
       </Card>
 
-      <View style={styles.actions}>
+      <Animated.View entering={enter(2)} style={styles.actions}>
         <Button label="Add food" icon="add" style={{ flex: 1 }} onPress={() => router.push({ pathname: '/add-food', params: { date: today } })} />
         <Button
           label="Exercise"
@@ -57,17 +59,21 @@ export default function TodayScreen() {
           style={{ flex: 1 }}
           onPress={() => router.push({ pathname: '/add-exercise', params: { date: today } })}
         />
-      </View>
+      </Animated.View>
 
-      <Card>
+      <Card index={3}>
         <MacroBars eaten={day.totals} target={plan.macros} />
       </Card>
 
-      <WaterCard date={today} ml={day.summary.waterMl} goal={waterGoal} />
+      <Animated.View entering={enter(4)}>
+        <WaterCard date={today} ml={day.summary.waterMl} goal={waterGoal} />
+      </Animated.View>
 
       <SectionHeader title={`Coach · ${friendlyDay(today)}`} />
-      {insights.map((i) => (
-        <InsightCard key={i.id} insight={i} />
+      {insights.map((i, idx) => (
+        <Animated.View key={i.id} entering={enter(5 + idx)} layout={listLayout}>
+          <InsightCard insight={i} />
+        </Animated.View>
       ))}
     </Screen>
   );

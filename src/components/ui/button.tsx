@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { tap } from '@/lib/feedback';
 
 import { Icon, type IconName } from './icon';
+import { PressScale } from './press-scale';
 import { AppText } from './text';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -23,27 +24,23 @@ export function Button({ label, icon, variant = 'primary', size = 'md', style, d
   const fg = { primary: t.onAccent, secondary: t.text, ghost: t.accent, danger: t.danger }[variant];
 
   return (
-    <Pressable
+    <PressScale
       accessibilityRole="button"
       accessibilityLabel={label}
       disabled={disabled}
+      to={0.96}
       onPress={(e) => {
         tap();
         onPress?.(e);
       }}
-      style={({ pressed }) => [
-        styles.base,
-        size === 'lg' && styles.lg,
-        { backgroundColor: bg, opacity: disabled ? 0.4 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
-        style,
-      ]}
+      style={[styles.base, size === 'lg' && styles.lg, { backgroundColor: bg, opacity: disabled ? 0.4 : 1 }, style]}
       {...rest}
     >
       {icon && <Icon name={icon} size={size === 'lg' ? 20 : 17} color={fg} />}
       <AppText variant="title" style={{ color: fg }}>
         {label}
       </AppText>
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -59,32 +56,24 @@ export function IconButton({ icon, label, tone = 'glass', size = 40, onPress, di
   const bg = tone === 'accent' ? t.accent : tone === 'glass' ? t.backgroundSelected : 'transparent';
   const fg = tone === 'accent' ? t.onAccent : t.text;
   return (
-    <Pressable
+    <PressScale
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }}
       hitSlop={8}
       disabled={disabled}
+      to={0.88}
       onPress={(e) => {
         tap();
         onPress?.(e);
       }}
-      style={({ pressed }) => [
-        styles.icon,
-        {
-          width: size,
-          height: size,
-          backgroundColor: bg,
-          opacity: disabled ? 0.3 : 1,
-          transform: [{ scale: pressed ? 0.92 : 1 }],
-        },
-      ]}
+      style={[styles.icon, { width: size, height: size, backgroundColor: bg, opacity: disabled ? 0.3 : 1 }]}
       {...rest}
     >
       <View>
         <Icon name={icon} size={size * 0.45} color={fg} />
       </View>
-    </Pressable>
+    </PressScale>
   );
 }
 

@@ -1,36 +1,40 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import Animated, { interpolateColor, ReduceMotion, useAnimatedStyle, useSharedValue, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
 
 import { DisplayFont, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { tap } from '@/lib/feedback';
+import { EASE_OUT, SPRING } from '@/lib/motion';
 
 import { IconButton } from './button';
+import { Bump } from './bump';
+import { PressScale } from './press-scale';
 import { AppText } from './text';
 
 // ── Chip ────────────────────────────────────────────────
 export function Chip({ label, selected, onPress }: { label: string; selected?: boolean; onPress?: () => void }) {
   const t = useTheme();
+  const p = useSharedValue(selected ? 1 : 0);
+  useEffect(() => {
+    p.set(withTiming(selected ? 1 : 0, { duration: 200, reduceMotion: ReduceMotion.System }));
+  }, [selected, p]);
+  const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(p.get(), [0, 1], [t.backgroundSelected, t.accent]) }));
   return (
-    <Pressable
+    <PressScale
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      to={0.94}
       onPress={() => {
         tap();
         onPress?.();
       }}
-      style={({ pressed }) => [
-        styles.chip,
-        {
-          backgroundColor: selected ? t.accent : t.backgroundSelected,
-          transform: [{ scale: pressed ? 0.96 : 1 }],
-        },
-      ]}
+      style={[styles.chip, bg]}
     >
       <AppText variant="caption" style={{ color: selected ? t.onAccent : t.text, fontWeight: '700' }}>
         {label}
       </AppText>
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -45,8 +49,24 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   const t = useTheme();
+  const [width, setWidth] = useState(0);
+  const index = Math.max(0, options.findIndex((o) => o.id === value));
+  const itemW = width / options.length;
+  const x = useSharedValue(0);
+  useEffect(() => {
+    x.value = withSpring(index * itemW, { ...SPRING, reduceMotion: ReduceMotion.System });
+  }, [index, itemW, x]);
+  const pill = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
+
   return (
-    <View style={[styles.segment, { backgroundColor: t.backgroundSelected }]} accessibilityRole="tablist">
+    <View
+      style={[styles.segment, { backgroundColor: t.backgroundSelected }]}
+      accessibilityRole="tablist"
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width - 8)}
+    >
+      {width > 0 && (
+        <Animated.View pointerEvents="none" style={[styles.segmentPill, { width: itemW, backgroundColor: t.accent }, pill]} />
+      )}
       {options.map((o) => {
         const active = o.id === value;
         return (
@@ -58,7 +78,7 @@ export function Segmented<T extends string>({
               tap();
               onChange(o.id);
             }}
-            style={[styles.segmentItem, active && { backgroundColor: t.accent }]}
+            style={styles.segmentItem}
           >
             <AppText variant="caption" style={{ color: active ? t.onAccent : t.textSecondary, fontWeight: '700' }} numberOfLines={1}>
               {o.label}
@@ -84,19 +104,19 @@ export function OptionCard({
 }) {
   const t = useTheme();
   return (
-    <Pressable
+    <PressScale
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
+      to={0.98}
       onPress={() => {
         tap();
         onPress();
       }}
-      style={({ pressed }) => [
+      style={[
         styles.option,
         {
           backgroundColor: selected ? 'rgba(198,255,61,0.10)' : t.backgroundElement,
           borderColor: selected ? t.accent : t.hairline,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
         },
       ]}
     >
@@ -105,9 +125,14 @@ export function OptionCard({
         {detail ? <AppText variant="caption">{detail}</AppText> : null}
       </View>
       <View style={[styles.radio, { borderColor: selected ? t.accent : t.textMuted }]}>
-        {selected && <View style={[styles.radioDot, { backgroundColor: t.accent }]} />}
+        {selected && (
+          <Animated.View
+            entering={ZoomIn.springify().damping(14).reduceMotion(ReduceMotion.System)}
+            style={[styles.radioDot, { backgroundColor: t.accent }]}
+          />
+        )}
       </View>
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -122,10 +147,15 @@ type FieldProps = Omit<TextInputProps, 'value' | 'onChangeText'> & {
 export function Field({ label, suffix, style, ...rest }: FieldProps) {
   const t = useTheme();
   const [focused, setFocused] = useState(false);
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.set(withTiming(focused ? 1 : 0, { duration: 180, reduceMotion: ReduceMotion.System }));
+  }, [focused, p]);
+  const border = useAnimatedStyle(() => ({ borderColor: interpolateColor(p.get(), [0, 1], [`${t.accent}00`, t.accent]) }));
   return (
     <View style={[{ gap: Spacing.one + 2 }, style as object]}>
       {label ? <AppText variant="label">{label}</AppText> : null}
-      <View style={[styles.field, { backgroundColor: t.backgroundSelected, borderColor: focused ? t.accent : 'transparent' }]}>
+      <Animated.View style={[styles.field, { backgroundColor: t.backgroundSelected }, border]}>
         <TextInput
           placeholderTextColor={t.textMuted}
           selectionColor={t.accent}
@@ -135,7 +165,7 @@ export function Field({ label, suffix, style, ...rest }: FieldProps) {
           {...rest}
         />
         {suffix ? <AppText variant="caption">{suffix}</AppText> : null}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -173,7 +203,7 @@ export function Stepper({
   return (
     <View style={styles.stepper}>
       <IconButton icon="remove" label="Decrease" onPress={() => set(value - step)} size={48} />
-      <View style={{ alignItems: 'center', flex: 1 }}>
+      <Bump value={value} amount={1.06} style={{ alignItems: 'center', flex: 1 }}>
         <TextInput
           value={text}
           onChangeText={(s) => {
@@ -187,7 +217,7 @@ export function Stepper({
           style={[styles.stepperInput, { color: t.text }]}
         />
         {suffix ? <AppText variant="caption">{suffix}</AppText> : null}
-      </View>
+      </Bump>
       <IconButton icon="add" label="Increase" tone="accent" onPress={() => set(value + step)} size={48} />
     </View>
   );
@@ -197,9 +227,14 @@ export function Stepper({
 export function ProgressBar({ value, max, color = 'accent', height = 8 }: { value: number; max: number; color?: ThemeColor; height?: number }) {
   const t = useTheme();
   const pct = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.value = withTiming(pct, { duration: 500, easing: EASE_OUT, reduceMotion: ReduceMotion.System });
+  }, [pct, p]);
+  const fill = useAnimatedStyle(() => ({ width: `${p.value * 100}%` }));
   return (
     <View style={{ height, borderRadius: height, backgroundColor: t.track, overflow: 'hidden' }}>
-      <View style={{ width: `${pct * 100}%`, height, borderRadius: height, backgroundColor: t[color] }} />
+      <Animated.View style={[{ height, borderRadius: height, backgroundColor: t[color] }, fill]} />
     </View>
   );
 }
@@ -207,6 +242,7 @@ export function ProgressBar({ value, max, color = 'accent', height = 8 }: { valu
 const styles = StyleSheet.create({
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.pill },
   segment: { flexDirection: 'row', padding: 4, borderRadius: Radius.pill },
+  segmentPill: { position: 'absolute', top: 4, bottom: 4, left: 4, borderRadius: Radius.pill },
   segmentItem: { flex: 1, paddingVertical: 9, paddingHorizontal: 8, borderRadius: Radius.pill, alignItems: 'center' },
   option: {
     flexDirection: 'row',

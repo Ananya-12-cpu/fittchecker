@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { ReduceMotion, useAnimatedProps, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 
 import { AppText } from '@/components/ui/text';
@@ -7,6 +8,19 @@ import { Spacing } from '@/constants/theme';
 import type { WeekDay } from '@/hooks/use-fit-data';
 import { useTheme } from '@/hooks/use-theme';
 import { isToday, weekdayShort } from '@/lib/date';
+import { EASE_OUT } from '@/lib/motion';
+
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
+
+/** One bar that grows up from the baseline (staggered by `i`). */
+function Bar({ i, x, chartH, h, barW, fill, opacity }: { i: number; x: number; chartH: number; h: number; barW: number; fill: string; opacity: number }) {
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.value = withDelay(i * 50, withTiming(1, { duration: 500, easing: EASE_OUT, reduceMotion: ReduceMotion.System }));
+  }, [i, h, p]);
+  const props = useAnimatedProps(() => ({ y: chartH - h * p.value, height: h * p.value }));
+  return <AnimatedRect x={x} width={barW} rx={barW / 2.5} fill={fill} opacity={opacity} animatedProps={props} />;
+}
 
 /** 7-day intake bars with a dashed target line. Bars over target turn coral. */
 export function WeekBars({ days, target, height = 180 }: { days: WeekDay[]; target: number; height?: number }) {
@@ -34,16 +48,7 @@ export function WeekBars({ days, target, height = 180 }: { days: WeekDay[]; targ
             const over = d.eaten > target * 1.05;
             const today = isToday(d.date);
             return (
-              <Rect
-                key={d.date}
-                x={x}
-                y={chartH - h}
-                width={barW}
-                height={h}
-                rx={barW / 2.5}
-                fill={over ? t.burn : t.accent}
-                opacity={today ? 1 : 0.55}
-              />
+              <Bar key={d.date} i={i} x={x} chartH={chartH} h={h} barW={barW} fill={over ? t.burn : t.accent} opacity={today ? 1 : 0.55} />
             );
           })}
           {days.map((d, i) => (

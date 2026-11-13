@@ -56,11 +56,11 @@ export default function AddExercise() {
       ))}
 
       <SectionHeader title="Duration" />
-      <Card>
+      <Card index={1}>
         <Stepper value={minutes} onChange={setMinutes} step={5} min={0} max={600} suffix="minutes" />
       </Card>
 
-      <Card tone="accent" style={{ gap: 2 }}>
+      <Card index={2} tone="accent" style={{ gap: 2 }}>
         <AppText variant="label" style={{ color: t.onAccent, opacity: 0.7 }}>
           {activity.name} · MET {activity.met}
         </AppText>

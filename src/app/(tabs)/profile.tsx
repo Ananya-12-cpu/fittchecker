@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { Button, IconButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -18,6 +19,7 @@ import { formatHeight, formatWeight } from '@/features/health/units';
 import { useCustomFoods } from '@/hooks/use-fit-data';
 import { useTheme } from '@/hooks/use-theme';
 import { confirmAction } from '@/lib/feedback';
+import { enter, listLayout, rowIn, rowOut } from '@/lib/motion';
 
 export default function ProfileScreen() {
   const t = useTheme();
@@ -55,7 +57,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
+      <Animated.View entering={enter(0)} style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: t.accent }]}>
           <AppText variant="h1" style={{ color: t.onAccent }}>
             {initials}
@@ -65,9 +67,9 @@ export default function ProfileScreen() {
           <AppText variant="h1">{profile.name || 'Your profile'}</AppText>
           <AppText variant="caption">All data is stored on this device</AppText>
         </View>
-      </View>
+      </Animated.View>
 
-      <Card padded={false}>
+      <Card index={1} padded={false}>
         {rows.map(([k, v], i) => (
           <View key={k} style={[styles.row, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline }]}>
             <AppText variant="body" color="textSecondary">
@@ -103,14 +105,14 @@ export default function ProfileScreen() {
       </AppText>
 
       <SectionHeader title="My foods" action={<Button label="New" icon="add" variant="ghost" onPress={() => router.push('/custom-food')} />} />
-      <Card padded={false}>
+      <Card index={1} padded={false}>
         {customFoods.length === 0 ? (
           <EmptyState icon="food" title="No custom foods" body="Add home recipes or packaged foods from their label." />
         ) : (
           customFoods.map((f, i) => {
             const [unit, grams] = Object.entries(f.units)[0] ?? ['g', 100];
             return (
-              <View key={f.id} style={[styles.row, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline }]}>
+              <Animated.View key={f.id} entering={rowIn} exiting={rowOut} layout={listLayout} style={[styles.row, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline }]}>
                 <View style={{ flex: 1 }}>
                   <AppText variant="title">{f.name}</AppText>
                   <AppText variant="caption">
@@ -126,7 +128,7 @@ export default function ProfileScreen() {
                     if (await confirmAction('Delete food?', `${f.name} will be removed from your foods. Past logs stay.`)) deleteCustomFood(db, f.id);
                   }}
                 />
-              </View>
+              </Animated.View>
             );
           })
         )}

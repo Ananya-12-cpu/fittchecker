@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { BmiGauge } from '@/components/charts/bmi-gauge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { formatMl, formatWeight } from '@/features/health/units';
 import { usePlan } from '@/hooks/use-fit-data';
 import { useTheme } from '@/hooks/use-theme';
 import { tap } from '@/lib/feedback';
+import { enter, fadeIn, rowOut, SPRING } from '@/lib/motion';
 
 const CATEGORY_COLOR: Record<string, ThemeColor> = {
   underweight: 'water',
@@ -39,9 +41,11 @@ export default function CoachScreen() {
 
   return (
     <Screen>
-      <AppText variant="display">Coach</AppText>
+      <Animated.View entering={enter(0)}>
+        <AppText variant="display">Coach</AppText>
+      </Animated.View>
 
-      <Card style={{ gap: Spacing.three }}>
+      <Card index={1} style={{ gap: Spacing.three }}>
         <View style={styles.bmiTop}>
           <View>
             <AppText variant="label">Your BMI</AppText>
@@ -61,7 +65,7 @@ export default function CoachScreen() {
         </AppText>
       </Card>
 
-      <Card tone="accent" style={{ gap: Spacing.two }}>
+      <Card index={2} tone="accent" style={{ gap: Spacing.two }}>
         <AppText variant="label" style={{ color: t.onAccent, opacity: 0.7 }}>
           Your plan · {goalLabel(plan.goal)}
         </AppText>
@@ -74,7 +78,7 @@ export default function CoachScreen() {
       </Card>
 
       {plan.goalAdjusted || plan.goal !== plan.recommendedGoal ? (
-        <Card tone="glass" style={styles.notice}>
+        <Card index={3} tone="glass" style={styles.notice}>
           <Icon name="info" size={18} color={t.warn} />
           <View style={{ flex: 1, gap: Spacing.two }}>
             <AppText variant="caption" color="text">
@@ -94,10 +98,11 @@ export default function CoachScreen() {
       ) : null}
 
       <View style={styles.grid}>
-        <Metric label="Daily calories" value={plan.calorieTarget.toLocaleString('en-US')} unit="kcal" color="accent" />
-        <Metric label="Protein" value={String(plan.macros.protein)} unit="g / day" color="protein" />
-        <Metric label="Water" value={formatMl(plan.waterMl)} unit="per day" color="water" />
+        <Metric i={2} label="Daily calories" value={plan.calorieTarget.toLocaleString('en-US')} unit="kcal" color="accent" />
+        <Metric i={3} label="Protein" value={String(plan.macros.protein)} unit="g / day" color="protein" />
+        <Metric i={4} label="Water" value={formatMl(plan.waterMl)} unit="per day" color="water" />
         <Metric
+          i={5}
           label={plan.etaWeeks ? 'Time to target' : 'Target weight'}
           value={plan.etaWeeks ? `${plan.etaWeeks}` : formatWeight(plan.targetWeightKg, units)}
           unit={plan.etaWeeks ? `weeks → ${formatWeight(plan.targetWeightKg, units)}` : ''}
@@ -111,7 +116,7 @@ export default function CoachScreen() {
       </AppText>
 
       <SectionHeader title="This week's training" />
-      <Card padded={false}>
+      <Card index={4} padded={false}>
         {plan.workouts.map((w, i) => {
           const isToday = w.day === today;
           return (
@@ -136,7 +141,7 @@ export default function CoachScreen() {
       <TipSection title="Exercise guidance" tips={plan.exerciseNotes} />
       <TipSection title="Daily habits" tips={plan.habits} />
 
-      <Card tone="glass">
+      <Card index={5} tone="glass">
         <AppText variant="caption">
           FitChecker gives general wellness guidance, not medical advice. Talk to a doctor before starting a new diet or exercise
           program — especially if you are pregnant, have a medical condition or take medication.
@@ -148,10 +153,10 @@ export default function CoachScreen() {
   );
 }
 
-function Metric({ label, value, unit, color }: { label: string; value: string; unit: string; color: ThemeColor }) {
+function Metric({ label, value, unit, color, i }: { i: number; label: string; value: string; unit: string; color: ThemeColor }) {
   const t = useTheme();
   return (
-    <Card style={styles.metric}>
+    <Card index={i} style={styles.metric}>
       <View style={[styles.bar, { backgroundColor: t[color] }]} />
       <AppText variant="label">{label}</AppText>
       <AppText variant="h1" numberOfLines={1} adjustsFontSizeToFit>
@@ -167,8 +172,13 @@ function Metric({ label, value, unit, color }: { label: string; value: string; u
 function TipSection({ title, tips, initiallyOpen = false }: { title: string; tips: Tip[]; initiallyOpen?: boolean }) {
   const t = useTheme();
   const [open, setOpen] = useState(initiallyOpen);
+  const rot = useSharedValue(initiallyOpen ? 90 : 0);
+  const chevron = useAnimatedStyle(() => ({ transform: [{ rotate: `${rot.value}deg` }] }));
+  useEffect(() => {
+    rot.value = withSpring(open ? 90 : 0, { ...SPRING, reduceMotion: ReduceMotion.System });
+  }, [open, rot]);
   return (
-    <Card style={{ gap: Spacing.three }}>
+    <Card index={6} style={{ gap: Spacing.three }}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
@@ -179,11 +189,16 @@ function TipSection({ title, tips, initiallyOpen = false }: { title: string; tip
         style={styles.tipHeader}
       >
         <AppText variant="h2">{title}</AppText>
-        <AppText variant="caption">{open ? 'Hide' : `${tips.length} tips`}</AppText>
+        <View style={styles.tipRight}>
+          <AppText variant="caption">{open ? 'Hide' : `${tips.length} tips`}</AppText>
+          <Animated.View style={chevron}>
+            <Icon name="right" size={14} color={t.textSecondary} />
+          </Animated.View>
+        </View>
       </Pressable>
       {open &&
         tips.map((tip, i) => (
-          <View key={tip.title} style={styles.tip}>
+          <Animated.View key={tip.title} entering={fadeIn.delay(i * 40)} exiting={rowOut} style={styles.tip}>
             <AppText variant="number" style={{ color: t.accent, width: 28, fontSize: 16 }}>
               {String(i + 1).padStart(2, '0')}
             </AppText>
@@ -191,7 +206,7 @@ function TipSection({ title, tips, initiallyOpen = false }: { title: string; tip
               <AppText variant="title">{tip.title}</AppText>
               <AppText variant="caption">{tip.body}</AppText>
             </View>
-          </View>
+          </Animated.View>
         ))}
     </Card>
   );
@@ -206,6 +221,7 @@ const styles = StyleSheet.create({
   metric: { flexBasis: '46%', flexGrow: 1, gap: 2 },
   bar: { width: 24, height: 4, borderRadius: 2, marginBottom: Spacing.two },
   workout: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingVertical: Spacing.three - 2, paddingHorizontal: Spacing.three + 4 },
+  tipRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tipHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tip: { flexDirection: 'row', gap: Spacing.two },
 });

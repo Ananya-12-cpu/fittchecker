@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInRight, ReduceMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -86,6 +87,7 @@ export default function Onboarding() {
         )}
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <Animated.View key={step} entering={FadeInRight.duration(280).reduceMotion(ReduceMotion.System)} style={styles.stepBody}>
           <View style={{ gap: Spacing.one }}>
             <AppText variant="label" color="accent">
               {s.kicker}
@@ -116,6 +118,7 @@ export default function Onboarding() {
               {error}
             </AppText>
           ) : null}
+          </Animated.View>
         </ScrollView>
 
         <View style={styles.actions}>
@@ -139,5 +142,6 @@ const styles = StyleSheet.create({
   dot: { flex: 1, height: 4, borderRadius: 2 },
   brand: { marginTop: Spacing.three, gap: 2 },
   body: { gap: Spacing.four, paddingVertical: Spacing.three },
+  stepBody: { gap: Spacing.four },
   actions: { flexDirection: 'row', gap: Spacing.three },
 });
