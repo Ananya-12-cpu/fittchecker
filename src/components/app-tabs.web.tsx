@@ -35,7 +35,7 @@ export default function AppTabs() {
   );
 }
 
-function TabButton({ children, isFocused, icon, ...props }: TabTriggerSlotProps & { icon: IconName }) {
+function TabButton({ children, isFocused, icon, ref: _ref, ...props }: TabTriggerSlotProps & { icon: IconName }) {
   const t = useTheme();
   return (
     <Pressable {...props} style={({ pressed }) => [styles.btn, pressed && { opacity: 0.7 }]}>
