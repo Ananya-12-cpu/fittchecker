@@ -115,7 +115,7 @@ export function OptionCard({
       style={[
         styles.option,
         {
-          backgroundColor: selected ? 'rgba(198,255,61,0.10)' : t.backgroundElement,
+          backgroundColor: selected ? 'rgba(52,168,83,0.14)' : t.backgroundElement,
           borderColor: selected ? t.accent : t.hairline,
         },
       ]}

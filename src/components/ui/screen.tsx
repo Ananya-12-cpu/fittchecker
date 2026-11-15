@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { Platform, ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Gradients, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Icon, type IconName } from './icon';
@@ -20,8 +21,10 @@ export function Screen({ children, tab = true, contentContainerStyle, ...rest }:
   const insets = useSafeAreaInsets();
   const bottom = tab ? BottomTabInset + insets.bottom + (Platform.OS === 'web' ? 96 : Spacing.four) : insets.bottom + Spacing.five;
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: t.background }}
+    <View style={{ flex: 1, backgroundColor: t.background }}>
+      <LinearGradient colors={Gradients.wash} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 360 }} />
+      <ScrollView
+      style={{ flex: 1 }}
       contentContainerStyle={[
         styles.content,
         { paddingTop: tab ? insets.top + Spacing.three : Spacing.three, paddingBottom: bottom },
@@ -33,6 +36,7 @@ export function Screen({ children, tab = true, contentContainerStyle, ...rest }:
     >
       {children}
     </ScrollView>
+    </View>
   );
 }
 

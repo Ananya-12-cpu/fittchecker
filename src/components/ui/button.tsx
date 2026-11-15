@@ -5,6 +5,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { tap } from '@/lib/feedback';
 
 import { Icon, type IconName } from './icon';
+import { HeroGradient } from './gradient';
 import { PressScale } from './press-scale';
 import { AppText } from './text';
 
@@ -20,7 +21,7 @@ type ButtonProps = Omit<PressableProps, 'style' | 'children'> & {
 
 export function Button({ label, icon, variant = 'primary', size = 'md', style, disabled, onPress, ...rest }: ButtonProps) {
   const t = useTheme();
-  const bg = { primary: t.accent, secondary: t.backgroundSelected, ghost: 'transparent', danger: 'rgba(248,113,113,0.14)' }[variant];
+  const bg = { primary: t.accent, secondary: t.backgroundSelected, ghost: 'transparent', danger: 'rgba(234,88,12,0.14)' }[variant];
   const fg = { primary: t.onAccent, secondary: t.text, ghost: t.accent, danger: t.danger }[variant];
 
   return (
@@ -33,9 +34,10 @@ export function Button({ label, icon, variant = 'primary', size = 'md', style, d
         tap();
         onPress?.(e);
       }}
-      style={[styles.base, size === 'lg' && styles.lg, { backgroundColor: bg, opacity: disabled ? 0.4 : 1 }, style]}
+      style={[styles.base, size === 'lg' && styles.lg, { backgroundColor: variant === 'primary' ? 'transparent' : bg, opacity: disabled ? 0.4 : 1, overflow: 'hidden' }, style]}
       {...rest}
     >
+      {variant === 'primary' && <HeroGradient />}
       {icon && <Icon name={icon} size={size === 'lg' ? 20 : 17} color={fg} />}
       <AppText variant="title" style={{ color: fg }}>
         {label}
@@ -67,9 +69,10 @@ export function IconButton({ icon, label, tone = 'glass', size = 40, onPress, di
         tap();
         onPress?.(e);
       }}
-      style={[styles.icon, { width: size, height: size, backgroundColor: bg, opacity: disabled ? 0.3 : 1 }]}
+      style={[styles.icon, { width: size, height: size, backgroundColor: tone === 'accent' ? 'transparent' : bg, opacity: disabled ? 0.3 : 1, overflow: 'hidden' }]}
       {...rest}
     >
+      {tone === 'accent' && <HeroGradient />}
       <View>
         <Icon name={icon} size={size * 0.45} color={fg} />
       </View>

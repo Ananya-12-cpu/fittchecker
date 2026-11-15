@@ -52,7 +52,6 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="add-food" options={{ presentation: 'modal', title: 'Add food' }} />
           <Stack.Screen name="add-exercise" options={{ presentation: 'modal', title: 'Add exercise' }} />
-          <Stack.Screen name="custom-food" options={{ presentation: 'modal', title: 'New custom food' }} />
           <Stack.Screen name="log-weight" options={{ presentation: 'modal', title: 'Log weight' }} />
           <Stack.Screen name="edit-profile" options={{ presentation: 'modal', title: 'Edit profile' }} />
         </Stack>

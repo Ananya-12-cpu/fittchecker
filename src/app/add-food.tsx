@@ -269,7 +269,7 @@ export default function AddFood() {
         )}
 
         {results.length === 0 ? (
-          <EmptyState icon="search" title="No match" body="Try another spelling, or create it as a custom food." />
+          <EmptyState icon="search" title="No match" body="Try another spelling." />
         ) : (
           <View style={{ gap: Spacing.two }}>
             {results.map((f) => (
@@ -297,8 +297,6 @@ export default function AddFood() {
             ))}
           </View>
         )}
-
-        <Button label="Create custom food" icon="edit" variant="ghost" onPress={() => router.push('/custom-food')} />
       </Screen>
 
       {plate.length > 0 && (

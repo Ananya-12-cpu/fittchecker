@@ -3,6 +3,7 @@ import Animated from 'react-native-reanimated';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { HeroGradient } from './gradient';
 import { enter, listLayout } from '@/lib/motion';
 
 type Props = ViewProps & {
@@ -13,9 +14,9 @@ type Props = ViewProps & {
 };
 
 /** Glass card: translucent surface with a hairline border. Fades/slides in when `index` is given. */
-export function Card({ tone = 'solid', padded = true, index, style, ...rest }: Props) {
+export function Card({ tone = 'solid', padded = true, index, style, children, ...rest }: Props) {
   const t = useTheme();
-  const bg = tone === 'accent' ? t.accent : tone === 'glass' ? t.glass : t.backgroundElement;
+  const bg = tone === 'accent' ? 'transparent' : tone === 'glass' ? t.glass : t.backgroundElement;
   return (
     <Animated.View
       entering={index === undefined ? undefined : enter(index)}
@@ -27,7 +28,10 @@ export function Card({ tone = 'solid', padded = true, index, style, ...rest }: P
         style,
       ]}
       {...rest}
-    />
+    >
+      {tone === 'accent' && <HeroGradient />}
+      {children}
+    </Animated.View>
   );
 }
 

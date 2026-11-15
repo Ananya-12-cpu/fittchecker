@@ -44,7 +44,7 @@ export function CalorieRing({ consumed, target, size = 236, stroke = 18 }: Props
         <Defs>
           <LinearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor={over ? t.danger : t.accent} />
-            <Stop offset="1" stopColor={over ? t.burn : '#7CF5C4'} />
+            <Stop offset="1" stopColor={over ? t.burn : t.accentAlt} />
           </LinearGradient>
         </Defs>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={t.track} strokeWidth={stroke} fill="none" />

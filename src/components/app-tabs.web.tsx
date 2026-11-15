@@ -39,7 +39,7 @@ function TabButton({ children, isFocused, icon, ref: _ref, ...props }: TabTrigge
   const t = useTheme();
   return (
     <Pressable {...props} style={({ pressed }) => [styles.btn, pressed && { opacity: 0.7 }]}>
-      <View style={[styles.pill, isFocused && { backgroundColor: 'rgba(198,255,61,0.14)' }]}>
+      <View style={[styles.pill, isFocused && { backgroundColor: 'rgba(52,168,83,0.14)' }]}>
         <Icon name={icon} size={20} color={isFocused ? t.accent : t.textSecondary} />
       </View>
       <AppText variant="caption" style={{ fontSize: 11, color: isFocused ? t.text : t.textSecondary }}>

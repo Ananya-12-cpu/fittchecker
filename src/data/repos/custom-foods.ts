@@ -33,25 +33,6 @@ export async function listCustomFoods(db: SQLiteDatabase): Promise<Food[]> {
   return rows.map(toFood);
 }
 
-export async function addCustomFood(db: SQLiteDatabase, food: Omit<Food, 'id' | 'category' | 'isCustom'>) {
-  const id = `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-  await db.runAsync(
-    `INSERT INTO custom_food (id, name, kcal, protein, carbs, fat, units_json, default_unit, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    id,
-    food.name,
-    food.kcal,
-    food.protein,
-    food.carbs,
-    food.fat,
-    JSON.stringify(food.units),
-    food.defaultUnit,
-    Date.now(),
-  );
-  invalidate();
-  return id;
-}
-
 export async function deleteCustomFood(db: SQLiteDatabase, id: string) {
   await db.runAsync('DELETE FROM custom_food WHERE id = ?', id);
   invalidate();

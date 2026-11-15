@@ -122,7 +122,7 @@ export default function CoachScreen() {
           return (
             <View
               key={w.day}
-              style={[styles.workout, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline }, isToday && { backgroundColor: 'rgba(198,255,61,0.07)' }]}
+              style={[styles.workout, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline }, isToday && { backgroundColor: 'rgba(52,168,83,0.09)' }]}
             >
               <AppText variant="label" style={{ width: 34, color: isToday ? t.accent : t.textSecondary }}>
                 {w.day}

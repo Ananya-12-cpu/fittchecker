@@ -6,7 +6,7 @@ import Animated from 'react-native-reanimated';
 import { Button, IconButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Segmented } from '@/components/ui/controls';
-import { EmptyState, Screen, SectionHeader } from '@/components/ui/screen';
+import { Screen, SectionHeader } from '@/components/ui/screen';
 import { AppText } from '@/components/ui/text';
 import { Radius, Spacing } from '@/constants/theme';
 import { wipeAllData } from '@/data/db';
@@ -104,11 +104,10 @@ export default function ProfileScreen() {
         Asian cut-offs (overweight from 23, obese from 27.5) better reflect health risk for South & East Asian populations.
       </AppText>
 
-      <SectionHeader title="My foods" action={<Button label="New" icon="add" variant="ghost" onPress={() => router.push('/custom-food')} />} />
+      {customFoods.length > 0 && <SectionHeader title="My foods" />}
+      {customFoods.length > 0 && (
       <Card index={1} padded={false}>
-        {customFoods.length === 0 ? (
-          <EmptyState icon="food" title="No custom foods" body="Add home recipes or packaged foods from their label." />
-        ) : (
+        {(
           customFoods.map((f, i) => {
             const [unit, grams] = Object.entries(f.units)[0] ?? ['g', 100];
             return (
@@ -133,6 +132,7 @@ export default function ProfileScreen() {
           })
         )}
       </Card>
+      )}
 
       <SectionHeader title="Data" />
       <Button label="Reset all data" icon="reset" variant="danger" onPress={reset} />
